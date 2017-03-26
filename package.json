@@ -1,0 +1,16 @@
+{
+  "name": "vso_build",
+  "version": "2.1.0",
+  "description": "this is the description",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "microcule index.js --watch",
+    "start": "microcule index.js"
+  },
+  "author": "nobitagamer",
+  "dependencies": {
+    "microcule": "*"
+  },
+  "license": "MIT"
+}
