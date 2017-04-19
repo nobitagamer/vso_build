@@ -1,18 +1,29 @@
 module['exports'] = function vso_build (hook) {
   var params = hook.params
+
   var sourceBranch = ''
+  var buildParams = '{ }'
 
   if (hook.req.headers['x-gitlab-event'] === 'Merge Request Hook') {
     // GitLab
     var action = params.object_attributes.action
     if (action === 'open' || (action === 'update' && params.object_attributes.oldrev !== '')) {
-      sourceBranch = params.object_attributes.source_branch
+      sourceBranch = `refs/heads/${params.object_attributes.source_branch}`
     } else {
       hook.res.end('Skipped!')
     }
   } else if (hook.req.headers['x-event-key'] === 'pullrequest:created' || hook.req.headers['x-event-key'] === 'pullrequest:updated') {
     // Bitbucket
-    sourceBranch = params.pullrequest.source.branch.name
+    sourceBranch = `refs/heads/${params.pullrequest.source.branch.name}`
+  } else if (params.buildParams) {
+    var token = hook.req.headers['x-git-token'] || ''
+    if (token !== hook.env['vso_build_token']) {
+      hook.res.end('Unauthorized!')
+    }
+
+    // Manual trigger
+    buildParams = params.buildParams
+    sourceBranch = `${params.sourceBranch}`
   } else {
     hook.res.end('Bad request source!')
   }
@@ -27,7 +38,8 @@ module['exports'] = function vso_build (hook) {
       'definition': {
         'id': params.id
       },
-      'sourceBranch': `refs/heads/${sourceBranch}`
+      'sourceBranch': sourceBranch,
+      'buildParams': buildParams
     }
   }
 
